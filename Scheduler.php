@@ -37,8 +37,7 @@ class Scheduler extends Auth implements Scaffold {
                 $date = new \DateTime('03:00', new \DateTimeZone('Asia/Tokyo'));
                 $date = $date->add(new \DateInterval('P1D'));
                 $timestamp = $date->getTimestamp();
-                // wp_schedule_event($timestamp, 'daily', 'asmp_validate_install');
-                wp_schedule_event(time(), 'hourly', $sku . '_validate_install');
+                wp_schedule_event($timestamp, 'daily', $sku . '_validate_install');
             }
         }
     }
