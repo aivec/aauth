@@ -21,9 +21,10 @@ class Scheduler extends Auth implements Scaffold {
      * @param string $nag_display_name
      * @param string $auth_endpoint
      * @param string $allow_origin
+     * @param string $provider
      */
-    public function __construct($sku, $nag_display_name, $auth_endpoint, $allow_origin) {
-        parent::__construct($sku, $auth_endpoint, $allow_origin);
+    public function init($sku, $nag_display_name, $auth_endpoint, $allow_origin, $provider) {
+        parent::__construct($sku, $auth_endpoint, $allow_origin, $provider);
 
         $this->nag_display_name = $nag_display_name;
 
@@ -82,14 +83,14 @@ class Scheduler extends Auth implements Scaffold {
      */
     public function nag() {
         if ($this->authenticated() === false) {
-            $nag_message = $this->getNagErrorMessge();
+            $nag_message = $this->getNagErrorMessage();
             if (!empty($nag_message)) {
                 $class = 'notice notice-error';
                 $message = sprintf(
                     /* translators: %s: formatted plugin name. */
                     __('%1$s： %2$s', 'aivec'),
                     $this->nag_display_name,
-                    $this->getNagErrorMessge()
+                    $this->getNagErrorMessage()
                 );
                 printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), $message);
             }

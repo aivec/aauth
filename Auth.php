@@ -21,6 +21,13 @@ class Auth {
      * @var string
      */
     protected $auth_endpoint;
+
+    /**
+     * Authentication endpoint provider
+     *
+     * @var string
+     */
+    protected $provider;
    
     /**
      * Initialize this class and set member variables $sku and $auth_endpoint.
@@ -29,10 +36,12 @@ class Auth {
      * @param string $sku
      * @param string $auth_endpoint
      * @param string $allow_origin
+     * @param string $provider
      */
-    public function __construct($sku, $auth_endpoint, $allow_origin) {
+    public function __construct($sku, $auth_endpoint, $allow_origin, $provider) {
         $this->sku = $sku;
         $this->auth_endpoint = $auth_endpoint;
+        $this->provider = $provider;
 
         header('Access-Control-Allow-Origin: ' . $allow_origin, false);
     }
@@ -156,10 +165,19 @@ class Auth {
      *
      * @return string
      */
-    public function getNagErrorMessge() {
+    public function getNagErrorMessage() {
         $asmp_options = get_option(self::OPTIONS_KEY);
         return isset($asmp_options[$this->sku]['nag_error_message']) ?
             $asmp_options[$this->sku]['nag_error_message']
             : '';
+    }
+
+    /**
+     * Getter for provider member var
+     *
+     * @return string
+     */
+    public function getProvider() {
+        return $this->provider;
     }
 }
