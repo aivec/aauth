@@ -19,12 +19,9 @@ class Scheduler extends Auth implements Scaffold {
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @param string $sku
      * @param string $nag_display_name
-     * @param string $auth_endpoint
-     * @param string $allow_origin
-     * @param string $provider
      */
-    public function __construct($sku, $nag_display_name, $auth_endpoint, $allow_origin, $provider) {
-        parent::__construct($sku, $auth_endpoint, $allow_origin, $provider);
+    public function __construct($sku, $nag_display_name) {
+        parent::__construct($sku);
 
         $this->nag_display_name = $nag_display_name;
 

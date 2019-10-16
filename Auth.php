@@ -1,6 +1,8 @@
 <?php
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
+use InvalidArgumentException;
+
 /**
  * Proprietary authentication API calls for Aivec plugins/themes.
  */
@@ -14,36 +16,25 @@ class Auth {
      * @var string
      */
     protected $sku;
-
-    /**
-     * Authentication endpoint
-     *
-     * @var string
-     */
-    protected $auth_endpoint;
-
-    /**
-     * Authentication endpoint provider
-     *
-     * @var string
-     */
-    protected $provider;
    
     /**
-     * Initialize this class and set member variables $sku and $auth_endpoint.
+     * Aivec proprietary authentication Sellers instance
+     *
+     * @var Sellers
+     */
+    private $sellers;
+
+    /**
+     * Initialize this class and sets member variables.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @param string $sku
-     * @param string $auth_endpoint
-     * @param string $allow_origin
-     * @param string $provider
      */
-    public function __construct($sku, $auth_endpoint, $allow_origin, $provider) {
+    public function __construct($sku) {
         $this->sku = $sku;
-        $this->auth_endpoint = $auth_endpoint;
-        $this->provider = $provider;
+        $this->sellers = new Sellers($this);
 
-        header('Access-Control-Allow-Origin: ' . $allow_origin, false);
+        header('Access-Control-Allow-Origin: ' . $this->getOrigin(), false);
     }
 
     /**
@@ -63,7 +54,7 @@ class Auth {
         );
 
         $curl_opts = array(
-            CURLOPT_URL            => $this->auth_endpoint,
+            CURLOPT_URL            => $this->getEndpoint(),
             CURLOPT_REFERER        => $this->getHost(),
             CURLOPT_HEADER         => false,
             CURLOPT_RETURNTRANSFER => true,
@@ -127,6 +118,17 @@ class Auth {
     }
 
     /**
+     * Returns options for the SKU of this instance
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return array
+     */
+    public function getOptions() {
+        $asmp_options = get_option(self::OPTIONS_KEY);
+        return $asmp_options[$this->sku];
+    }
+
+    /**
      * Setter for asmp_ved
      *
      * @param boolean $asmp_ved
@@ -148,6 +150,24 @@ class Auth {
         $asmp_options = get_option(self::OPTIONS_KEY);
         $asmp_options[$this->sku]['nag_error_message'] = $error_message;
         update_option(self::OPTIONS_KEY, $asmp_options);
+    }
+
+
+    /**
+     * Override Auth default sellers instance
+     *
+     * @param Sellers $sellers
+     * @throws InvalidArgumentException Thrown if sellers is invalid.
+     * @return void
+     */
+    public function setSellers($sellers) {
+        if (!($sellers instanceof Sellers)) {
+            throw new InvalidArgumentException(
+                'sellers is not an instance of Aivec\Welcart\ProprietaryAuthentication\Sellers'
+            );
+        }
+
+        $this->sellers = $sellers;
     }
 
     /**
@@ -173,11 +193,56 @@ class Auth {
     }
 
     /**
-     * Getter for provider member var
+     * Getter for SKU member var
+     *
+     * @return string
+     */
+    public function getSku() {
+        return $this->sku;
+    }
+
+    /**
+     * Getter for provider
      *
      * @return string
      */
     public function getProvider() {
-        return $this->provider;
+        return $this->getOptions()['provider'];
+    }
+
+    /**
+     * Getter for origin
+     *
+     * @return string
+     */
+    public function getOrigin() {
+        return $this->getOptions()['origin'];
+    }
+
+    /**
+     * Getter for endpoint
+     *
+     * @return string
+     */
+    public function getEndpoint() {
+        return $this->getOptions()['endpoint'];
+    }
+
+    /**
+     * Getter for seller_site
+     *
+     * @return string
+     */
+    public function getSellerSite() {
+        return $this->getOptions()['seller_site'];
+    }
+
+    /**
+     * Getter for sellers object
+     *
+     * @return Sellers|null
+     */
+    public function getSellers() {
+        return $this->sellers;
     }
 }

@@ -11,6 +11,13 @@
     ],
     "require": {},
     "autoload": {
-        "psr-4": {"Aivec\\Welcart\\ProprietaryAuthentication\\": ""}
+        "psr-4": {
+            "Aivec\\Welcart\\ProprietaryAuthentication\\": ""
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "msgfmt languages/aauth-en.po -o languages/aauth-en.mo && msgfmt languages/aauth-ja.po -o languages/aauth-ja.mo"
+        ]
     }
 }
