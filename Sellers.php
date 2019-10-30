@@ -244,6 +244,8 @@ class Sellers {
         if (!empty($provider)) {
             $opts = get_option(Auth::OPTIONS_KEY);
             $opts[$this->aauth->getSku()]['provider'] = $provider;
+            // set ASMP to false so that authentication is tried immediately after this update
+            $opts[$this->aauth->getSku()]['asmp_ved'] = false;
             update_option(Auth::OPTIONS_KEY, $opts);
         }
     }
