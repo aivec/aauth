@@ -32,8 +32,6 @@ class Auth {
      */
     public function __construct($sku) {
         $this->sku = $sku;
-        $this->sellers = new Sellers($this);
-
         header('Access-Control-Allow-Origin: ' . $this->getOrigin(), false);
     }
 
