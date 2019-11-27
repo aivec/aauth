@@ -91,12 +91,12 @@ class Sellers {
      * @param array  $sellers
      * @param array  $aauth_meta
      * @throws InvalidArgumentException Thrown if aauth is not an instance of
-     * Aivec\Welcart\ProprietaryAuthentication\Auth.
+     * \Aivec\Welcart\ProprietaryAuthentication\Auth.
      */
     public function __construct($aauth, $default_provider = 'aivec', $sellers = ['aivec'], $aauth_meta = []) {
         if (!($aauth instanceof Auth)) {
             throw new InvalidArgumentException(
-                'aauth is not an instance of Aivec\Welcart\ProprietaryAuthentication\Auth'
+                'aauth is not an instance of \Aivec\Welcart\ProprietaryAuthentication\Auth'
             );
         }
         $this->aauth = $aauth;
@@ -110,6 +110,8 @@ class Sellers {
 
         load_textdomain('aauth', __DIR__ . '/languages/aauth-ja.mo');
         load_textdomain('aauth', __DIR__ . '/languages/aauth-en.mo');
+
+        add_action('init', array($this, 'updateAuthProvider'));
     }
 
     /**
@@ -236,17 +238,44 @@ class Sellers {
     /**
      * Update provider from user selection on settlement settings page
      *
+     * Since 'admin_notices' fires before the settlement options are updated, it will still display
+     * the same nag message after options are changed so long as the page has not been refreshed.
+     * To get around this, we update the auth provider selected from the settlement settings page
+     * in this hook before displaying the nag message so that the correct result is displayed immediately.
+     * It's not pretty, but it works.
+     *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @global \usc_e_shop $usces
      * @return void
      */
     public function updateAuthProvider() {
-        $provider = isset($_POST['aauth_provider']) ? sanitize_text_field(wp_unslash($_POST['aauth_provider'])) : '';
-        if (!empty($provider)) {
-            $opts = get_option(Auth::OPTIONS_KEY);
-            $opts[$this->aauth->getSku()]['provider'] = $provider;
-            // set ASMP to false so that authentication is tried immediately after this update
-            $opts[$this->aauth->getSku()]['asmp_ved'] = false;
-            update_option(Auth::OPTIONS_KEY, $opts);
+        global $usces;
+
+        if (isset($_POST['usces_option_update']) && isset($_POST['acting'])) {
+            check_admin_referer('admin_settlement', 'wc_nonce');
+
+            $_POST = $usces->stripslashes_deep_post($_POST);
+            $provider = isset($_POST[$this->aauth->getSku()]['aauth_provider']) ? sanitize_text_field(wp_unslash($_POST[$this->aauth->getSku()]['aauth_provider'])) : '';
+            if (!empty($provider)) {
+                $opts = get_option(Auth::OPTIONS_KEY);
+                $opts[$this->aauth->getSku()]['provider'] = $provider;
+                $meta = $opts[$this->aauth->getSku()]['meta'][$provider]['prod'];
+                if (isset($_ENV['AVC_NODE_ENV']) &&
+                    $_ENV['AVC_NODE_ENV'] === 'development' &&
+                    isset($opts[$this->aauth->getSku()]['meta'][$provider]['dev'])
+                ) {
+                    $meta = $opts[$this->aauth->getSku()]['meta'][$provider]['dev'];
+                }
+                // update origin/endpoint so that authentication is retried on the proper endpoint
+                $opts[$this->aauth->getSku()]['origin'] = isset($meta['origin']) ? $meta['origin'] : '';
+                $opts[$this->aauth->getSku()]['endpoint'] = isset($meta['api_endpoint']) ? $meta['api_endpoint'] : '';
+                $opts[$this->aauth->getSku()]['seller_site'] = isset($meta['seller_site']) ? $meta['seller_site'] : '';
+                $opts[$this->aauth->getSku()]['asmp_ved'] = false;
+                update_option(Auth::OPTIONS_KEY, $opts);
+
+                // retry authentication with new selections
+                $this->aauth->processAuthData();
+            }
         }
     }
 
@@ -290,15 +319,15 @@ class Sellers {
                         <?php $m = $this->getSellerMeta($seller); ?>
                         <td>
                             <input
-                                name="aauth_provider"
+                                name="<?php echo $this->aauth->getSku() ?>[aauth_provider]"
                                 type="radio"
-                                id="aauth_provider_<?php echo esc_attr($seller) ?>"
+                                id="aauth_provider_<?php echo esc_attr($this->aauth->getSku() . $seller) ?>"
                                 value="<?php echo esc_attr($seller) ?>"
                                 <?php echo $opts['provider'] === $seller ? 'checked' : ''; ?>
                             />
                         </td>
                         <td>
-                            <label for="aauth_provider_<?php echo esc_attr($seller) ?>">
+                            <label for="aauth_provider_<?php echo esc_attr($this->aauth->getSku() . $seller) ?>">
                                 <?php echo $m['seller_site'] ?>
                             </label>
                         </td>

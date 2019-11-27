@@ -29,7 +29,10 @@ class Scheduler extends Auth implements Scaffold {
         add_action('admin_notices', array($this, 'nag'));
         add_action($sku . '_validate_install', array($this, 'cronValidateInstall'));
         if ($this->authenticated() === false) {
-            $this->processAuthData();
+            $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+            if ($action !== 'heartbeat') {
+                $this->processAuthData();
+            }
         } else {
             $cron = wp_next_scheduled($sku . '_validate_install');
             if (!$cron) {
@@ -76,7 +79,7 @@ class Scheduler extends Auth implements Scaffold {
 
     /**
      * The nag (persistant warning or error message displayed at the top of the admin panel)
-     * for this plugin.
+     * for this plugin. Displays if client is unauthenticated.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @return void
