@@ -311,27 +311,27 @@ class Sellers {
                     <?php echo esc_html__('Authentication', 'aauth'); ?>
                 </span>
             </div>
-            <table class="settle_table">
-                <tr>
+            <table class="settle_table aivec">
+                <tr class="radio">
                     <th><?php echo esc_html__('Please choose your provider', 'aauth'); ?></th>
                     <?php $opts = $this->aauth->getOptions(); ?>
-                    <?php foreach ($this->meta as $seller => $meta) : ?>
-                        <?php $m = $this->getSellerMeta($seller); ?>
-                        <td>
-                            <input
-                                name="<?php echo $this->aauth->getSku() ?>[aauth_provider]"
-                                type="radio"
-                                id="aauth_provider_<?php echo esc_attr($this->aauth->getSku() . $seller) ?>"
-                                value="<?php echo esc_attr($seller) ?>"
-                                <?php echo $opts['provider'] === $seller ? 'checked' : ''; ?>
-                            />
-                        </td>
-                        <td>
-                            <label for="aauth_provider_<?php echo esc_attr($this->aauth->getSku() . $seller) ?>">
-                                <?php echo $m['seller_site'] ?>
+                    <td>
+                        <div>
+                        <?php foreach ($this->meta as $seller => $meta) : ?>
+                            <?php $m = $this->getSellerMeta($seller); ?>
+                            <label>
+                                <input
+                                    name="<?php echo $this->aauth->getSku() ?>[aauth_provider]"
+                                    type="radio"
+                                    id="aauth_provider_<?php echo esc_attr($this->aauth->getSku() . $seller) ?>"
+                                    value="<?php echo esc_attr($seller) ?>"
+                                    <?php echo $opts['provider'] === $seller ? 'checked' : ''; ?>
+                                />
+                                <span><?php echo $m['seller_site'] ?></span>
                             </label>
-                        </td>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                        </div>
+                    </td>
                 </tr>
             </table>
             <?php
