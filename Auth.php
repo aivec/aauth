@@ -1,6 +1,8 @@
 <?php
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
+use AAUTH\GuzzleHttp;
+use Exception;
 use InvalidArgumentException;
 
 /**
@@ -43,37 +45,36 @@ class Auth {
      * @return array
      */
     protected function authenticate() {
-        $ch = curl_init();
+        $guzzle = new GuzzleHttp\Client([
+            'base_uri' => $this->getEndpoint(),
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Referer' => $this->getHost(),
+            ],
+        ]);
+
         $client_data = array();
         $client_data['sku'] = $this->sku;
-        $curl_data = array(
+        $reqbody = [
             'asmp_action' => 'asmp_validate',
             'client_data' => $client_data,
-        );
-
-        $curl_opts = array(
-            CURLOPT_URL            => $this->getEndpoint(),
-            CURLOPT_REFERER        => $this->getHost(),
-            CURLOPT_HEADER         => false,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => http_build_query($curl_data),
-        );
-        
-        curl_setopt_array($ch, $curl_opts);
-        $output = curl_exec($ch);
-        $errno = curl_errno($ch);
+        ];
 
         $asmp_results = array();
-        if ($errno) {
-            $error_message = curl_strerror($errno);
-            $error_mes = '* ' . __('There was a problem accessing Aivecs server. Please try again.', 'aivec');
-            $asmp_results['curl_error'] = $error_mes;
-        } else {
-            $asmp_results = json_decode($output, true);
+        try {
+            $response = $guzzle->post('', ['form_params' => $reqbody]);
+            $asmp_results = json_decode($response->getBody(), true);
+        } catch (Exception $e) {
+            $opts = $this->getOptions();
+            $seller = isset($opts['provider']) ? $opts['provider'] : 'Aivec';
+            $error_mes = '* ' . sprintf(
+                // translators: the name of the company whose server is being called
+                __('There was a problem accessing %s server. Please try again.', 'aauth'),
+                $seller
+            );
+            $asmp_results['status'] = 'error';
+            $asmp_results['error']['message'] = $error_mes;
         }
-
-        curl_close($ch);
 
         return $asmp_results;
     }

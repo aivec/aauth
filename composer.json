@@ -1,7 +1,6 @@
 {
     "name": "aivec/aauth",
     "description": "Domain/SKU client-side authentication for a 継続課金 plugin/theme purchase. Client variant to server-side plugin ninsho-validator.",
-    "type": "library",
     "license": "GPL-2.0-only",
     "authors": [
         {
@@ -9,15 +8,47 @@
             "email": "evandanielshaw@gmail.com"
         }
     ],
-    "require": {},
+    "require": {
+        "guzzlehttp/guzzle": "~6.0"
+    },
+    "require-dev": {
+        "coenjacobs/mozart": "^0.4.0",
+        "squizlabs/php_codesniffer": "^3.5",
+        "wp-coding-standards/wpcs": "^2.2",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.5.0"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "rm -r vendor/guzzlehttp",
+            "rm -r vendor/ralouphie",
+            "rm -r vendor/psr",
+            "composer dump-autoload --optimize",
+            "wp i18n make-pot . languages/messages.pot --domain=aauth --include=Auth.php,Scaffold.php,Scheduler.php,Sellers.php",
+            "sed -i \"s/%%VERSION%%/`git describe --abbrev=0 --tags | sed 's/v//g'`/g\" languages/messages.pot",
+            "find ./languages -name \"*.po\" | xargs -I % msgmerge -o % % languages/messages.pot",
+            "find ./languages -name \"*.po\" | sed 's/\\.po//g' | xargs -I % msgfmt %.po -o %.mo"
+        ]
+    },
     "autoload": {
+        "files": [
+            "dist/AAUTH/GuzzleHttp/functions_include.php",
+            "dist/AAUTH/GuzzleHttp/Psr7/functions_include.php",
+            "dist/AAUTH/GuzzleHttp/Promise/functions_include.php"
+        ],
         "psr-4": {
+            "AAUTH\\": "dist/AAUTH",
             "Aivec\\Welcart\\ProprietaryAuthentication\\": ""
         }
     },
-    "scripts": {
-        "post-autoload-dump": [
-            "msgfmt languages/aauth-en.po -o languages/aauth-en.mo && msgfmt languages/aauth-ja.po -o languages/aauth-ja.mo"
-        ]
+    "extra": {
+        "mozart": {
+            "dep_namespace": "AAUTH\\",
+            "dep_directory": "/dist/AAUTH/",
+            "classmap_directory": "/dist/classes/",
+            "classmap_prefix": "AAUTH_",
+            "packages": [
+                "guzzlehttp/guzzle"
+            ]
+        }
     }
 }

@@ -1,33 +1,31 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Aivec LLC.\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-10T14:07:03+09:00\n"
-"PO-Revision-Date: 2019-06-06 16:02+0900\n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"Language: ja\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.2.1\n"
+"POT-Creation-Date: 2019-12-10T14:07:03+09:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.4.0\n"
+"X-Domain: aauth\n"
 
 #. translators: the name of the company whose server is being called
 #: Auth.php:72
 msgid "There was a problem accessing %s server. Please try again."
 msgstr ""
-"%sのサーバーにアクセスする際に問題が発生しました。もう一度お試しください。"
 
 #. translators: 1: formatted plugin name, 2: response message from server
 #: Scheduler.php:98
 msgid "%1$s： %2$s"
-msgstr "%1$s： %2$s"
+msgstr ""
 
 #: Sellers.php:308
 msgid "Authentication"
-msgstr "認証確認"
+msgstr ""
 
 #: Sellers.php:313
 msgid "Please choose your provider"
-msgstr "購入したサイトを選択してください"
+msgstr ""

@@ -22,6 +22,10 @@ class Scheduler extends Auth implements Scaffold {
      * @param string $plugin_file  name of plugin entry file INCLUDING absolute path
      */
     public function __construct($sku, $nag_display_name, $plugin_file) {
+        require_once(__DIR__ . '/vendor/autoload.php');
+
+        load_textdomain('aauth', __DIR__ . '/languages/aauth-ja.mo');
+        load_textdomain('aauth', __DIR__ . '/languages/aauth-en.mo');
         parent::__construct($sku);
 
         $this->nag_display_name = $nag_display_name;
@@ -90,8 +94,8 @@ class Scheduler extends Auth implements Scaffold {
             if (!empty($nag_message)) {
                 $class = 'notice notice-error';
                 $message = sprintf(
-                    /* translators: %s: formatted plugin name. */
-                    __('%1$s： %2$s', 'aivec'),
+                    /* translators: 1: formatted plugin name, 2: response message from server */
+                    __('%1$s： %2$s', 'aauth'),
                     $this->nag_display_name,
                     $this->getNagErrorMessage()
                 );

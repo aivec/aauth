@@ -108,9 +108,6 @@ class Sellers {
         $this->validateAauthMeta();
         $this->setDefaultSellerOptions();
 
-        load_textdomain('aauth', __DIR__ . '/languages/aauth-ja.mo');
-        load_textdomain('aauth', __DIR__ . '/languages/aauth-en.mo');
-
         add_action('init', array($this, 'updateAuthProvider'));
     }
 
