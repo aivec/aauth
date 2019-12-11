@@ -45,16 +45,18 @@ class Auth {
      * @return array
      */
     protected function authenticate() {
+        $domain = $this->getHost();
         $guzzle = new GuzzleHttp\Client([
             'base_uri' => $this->getEndpoint(),
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
-                'Referer' => $this->getHost(),
+                'Referer' => $domain,
             ],
         ]);
 
         $client_data = array();
         $client_data['sku'] = $this->sku;
+        $client_data['domain'] = $domain;
         $reqbody = [
             'asmp_action' => 'asmp_validate',
             'client_data' => $client_data,

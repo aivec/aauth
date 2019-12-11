@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Aivec LLC.\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-10T15:21:30+09:00\n"
+"POT-Creation-Date: 2019-12-11T10:37:52+09:00\n"
 "PO-Revision-Date: 2019-06-06 16:02+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 
 #. translators: the name of the company whose server is being called
-#: Auth.php:72
+#: Auth.php:74
 msgid "There was a problem accessing %s server. Please try again."
 msgstr ""
 "%sのサーバーにアクセスする際に問題が発生しました。もう一度お試しください。"
@@ -22,7 +22,7 @@ msgstr ""
 #. translators: 1: formatted plugin name, 2: response message from server
 #: Scheduler.php:98
 msgid "%1$s： %2$s"
-msgstr "%1$s： %2$s"
+msgstr "%1$s (認証確認)： %2$s"
 
 #: Sellers.php:308
 msgid "Authentication"
