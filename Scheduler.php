@@ -18,20 +18,25 @@ class Scheduler extends Auth implements Scaffold {
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @param string $sku
+     * @param string $product_version
      * @param string $nag_display_name
-     * @param string $plugin_file  name of plugin entry file INCLUDING absolute path
+     * @param string $plugin_file name of plugin entry file INCLUDING absolute path
      */
-    public function __construct($sku, $nag_display_name, $plugin_file) {
+    public function __construct($sku, $product_version, $nag_display_name, $plugin_file) {
         require_once(__DIR__ . '/vendor/autoload.php');
 
-        load_textdomain('aauth', __DIR__ . '/languages/aauth-ja.mo');
-        load_textdomain('aauth', __DIR__ . '/languages/aauth-en.mo');
-        parent::__construct($sku);
+        $mopath = __DIR__ . '/languages/aauth-' . get_locale() . '.mo';
+        if (file_exists($mopath)) {
+            load_textdomain('aauth', $mopath);
+        } else {
+            load_textdomain('aauth', __DIR__ . '/languages/aauth-en.mo');
+        }
+        parent::__construct($sku, $product_version);
 
         $this->nag_display_name = $nag_display_name;
 
-        add_action('admin_notices', array($this, 'nag'));
-        add_action($sku . '_validate_install', array($this, 'cronValidateInstall'));
+        add_action('admin_notices', [$this, 'nag']);
+        add_action($sku . '_validate_install', [$this, 'cronValidateInstall']);
         if ($this->authenticated() === false) {
             $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
             if ($action !== 'heartbeat') {
@@ -47,7 +52,7 @@ class Scheduler extends Auth implements Scaffold {
             }
         }
 
-        register_deactivation_hook($plugin_file, array($this, 'clearCron'));
+        register_deactivation_hook($plugin_file, [$this, 'clearCron']);
     }
 
     /**
@@ -67,16 +72,15 @@ class Scheduler extends Auth implements Scaffold {
      * @return void
      */
     public function processAuthData() {
-        $asmp_results = $this->authenticate();
+        $result = $this->authenticate();
 
-        if ($asmp_results['status'] === 'success') {
+        if ($result === 'success') {
             $this->setAsmpVED(true);
             $this->setNagErrorMessage('');
             do_action('aauth_' . $this->sku . '_on_success');
-        }
-        if ($asmp_results['status'] === 'error') {
+        } else {
             $this->setAsmpVED(false);
-            $this->setNagErrorMessage($asmp_results['error']['message']);
+            $this->setNagErrorMessage($result);
             do_action('aauth_' . $this->sku . '_on_failure');
         }
     }

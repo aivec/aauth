@@ -2,7 +2,7 @@
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
 use AAUTH\GuzzleHttp;
-use Exception;
+use AAUTH\GuzzleHttp\Exception\RequestException;
 use InvalidArgumentException;
 
 /**
@@ -10,6 +10,7 @@ use InvalidArgumentException;
  */
 class Auth {
 
+    const VERSION = '4.0.0';
     const OPTIONS_KEY = 'asmp_authdata';
 
     /**
@@ -18,6 +19,13 @@ class Auth {
      * @var string
      */
     protected $sku;
+
+    /**
+     * The version number of this plugin/theme
+     *
+     * @var string
+     */
+    protected $product_version;
    
     /**
      * Aivec proprietary authentication Sellers instance
@@ -31,54 +39,80 @@ class Auth {
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @param string $sku
+     * @param string $product_version
      */
-    public function __construct($sku) {
+    public function __construct($sku, $product_version) {
         $this->sku = $sku;
+        $this->product_version = $product_version;
         header('Access-Control-Allow-Origin: ' . $this->getOrigin(), false);
     }
 
     /**
-     * Creates curl instance that attempts to validate a proprietary theme/plugin with Aivec's
-     * validation plugin. The validation plugin waits for requests at the given .
+     * Creates `GuzzleHttp\Client` instance that attempts to validate a proprietary theme/plugin with Aivec's
+     * validation plugin. The validation plugin waits for requests at the given endpoint.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @return array
      */
     protected function authenticate() {
+        global $wp_version, $wpdb;
+
         $domain = $this->getHost();
         $guzzle = new GuzzleHttp\Client([
-            'base_uri' => $this->getEndpoint(),
             'headers' => [
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Referer' => $domain,
             ],
         ]);
 
-        $client_data = array();
-        $client_data['sku'] = $this->sku;
-        $client_data['domain'] = $domain;
+        $server_info = null;
+        if ($wpdb->use_mysqli) {
+            $server_info = mysqli_get_server_info($wpdb->dbh);
+        } else {
+            $server_info = mysql_get_server_info($wpdb->dbh);
+        }
+        
         $reqbody = [
-            'asmp_action' => 'asmp_validate',
-            'client_data' => $client_data,
+            'payload' => json_encode(
+                [
+                    'domain' => $domain,
+                    'aauthVersion' => self::VERSION,
+                    'productVersion' => $this->product_version,
+                    'welcartVersion' => USCES_VERSION,
+                    'wordpressVersion' => $wp_version,
+                    'phpVersion' => phpversion(),
+                    'webServer' => isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : '',
+                    'databaseInfo' => $server_info,
+                    'databaseVersion' => $wpdb->db_version(),
+                ]
+            ),
         ];
 
-        $asmp_results = array();
+        $opts = $this->getOptions();
+        $seller = isset($opts['provider']) ? $opts['provider'] : 'Aivec';
+        $defaulte = '* ' . sprintf(
+            // translators: the name of the company whose server is being called
+            __('There was a problem accessing %s server. Please try again.', 'aauth'),
+            $seller
+        );
+
+        $result = $defaulte;
         try {
-            $response = $guzzle->post('', ['form_params' => $reqbody]);
-            $asmp_results = json_decode($response->getBody(), true);
-        } catch (Exception $e) {
-            $opts = $this->getOptions();
-            $seller = isset($opts['provider']) ? $opts['provider'] : 'Aivec';
-            $error_mes = '* ' . sprintf(
-                // translators: the name of the company whose server is being called
-                __('There was a problem accessing %s server. Please try again.', 'aauth'),
-                $seller
+            $response = $guzzle->post(
+                trim($this->getEndpoint(), '/') . "/wcexasmp/authenticate/{$this->sku}",
+                ['form_params' => $reqbody]
             );
-            $asmp_results['status'] = 'error';
-            $asmp_results['error']['message'] = $error_mes;
+            $result = json_decode($response->getBody(), true);
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $error = json_decode($e->getResponse()->getBody(), true);
+                if (is_array($error)) {
+                    $result = isset($error['message']) ? $error['message'] : $defaulte;
+                }
+            }
         }
 
-        return $asmp_results;
+        return $result;
     }
 
     /**
@@ -89,7 +123,7 @@ class Auth {
      * @return string   // the domain name
      */
     protected function getHost() {
-        $possible_host_sources = array('HTTP_X_FORWARDED_HOST', 'HTTP_HOST', 'SERVER_NAME');
+        $possible_host_sources = ['HTTP_X_FORWARDED_HOST', 'HTTP_HOST', 'SERVER_NAME'];
         $host = '';
         foreach ($possible_host_sources as $source) {
             if (!empty($host)) {

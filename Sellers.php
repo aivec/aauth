@@ -108,7 +108,7 @@ class Sellers {
         $this->validateAauthMeta();
         $this->setDefaultSellerOptions();
 
-        add_action('init', array($this, 'updateAuthProvider'));
+        add_action('init', [$this, 'updateAuthProvider']);
     }
 
     /**

@@ -4,7 +4,7 @@ Proprietary authentication package for [Aivec plugins](aivec.co.jp/plugin).
 ## Building
 Using a special development-only `composer-dev.json` is required when building this library. Use the below command each time **BEFORE YOU COMMIT**
 ```bash
-$ export COMPOSER=composer-dev.json && composer install --no-dev
+$ export COMPOSER=composer-dev.json && composer build
 ```
 
 ## Why are the vendor and dist directories version controlled?

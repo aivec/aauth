@@ -1,17 +1,17 @@
 {
-    "name": "aivec/aauth",
-    "description": "Domain/SKU client-side authentication for a 継続課金 plugin/theme purchase. Client variant to server-side plugin ninsho-validator.",
-    "license": "GPL-2.0-only",
-    "authors": [
-        {
-            "name": "Evan Shaw",
-            "email": "evandanielshaw@gmail.com"
-        }
-    ],
-    "require": {},
-    "autoload": {
-        "psr-4": {
-            "Aivec\\Welcart\\ProprietaryAuthentication\\": ""
-        }
+  "name": "aivec/aauth",
+  "description": "Domain/SKU client-side authentication for a 継続課金 plugin/theme purchase. Client variant to server-side plugin ninsho-validator.",
+  "license": "GPL-2.0-only",
+  "authors": [
+    {
+      "name": "Evan Shaw",
+      "email": "evandanielshaw@gmail.com"
     }
+  ],
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "Aivec\\Welcart\\ProprietaryAuthentication\\": ""
+    }
+  }
 }
