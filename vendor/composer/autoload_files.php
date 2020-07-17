@@ -6,7 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    '2bbd26661303cdaca182788552eea29b' => $baseDir . '/dist/AAUTH/GuzzleHttp/functions_include.php',
-    '084d1c7c5e559b9aee274ca8cb026673' => $baseDir . '/dist/AAUTH/GuzzleHttp/Psr7/functions_include.php',
-    'cf7bd8006703c6b40255c3f5184b944d' => $baseDir . '/dist/AAUTH/GuzzleHttp/Promise/functions_include.php',
+    '3937806105cc8e221b8fa8db5b70d2f2' => $vendorDir . '/wp-cli/mustangostang-spyc/includes/functions.php',
+    'be01b9b16925dcb22165c40b46681ac6' => $vendorDir . '/wp-cli/php-cli-tools/lib/cli/cli.php',
+    'ffb465a494c3101218c4417180c2c9a2' => $vendorDir . '/wp-cli/i18n-command/i18n-command.php',
 );

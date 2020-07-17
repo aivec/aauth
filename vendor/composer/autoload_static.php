@@ -4,38 +4,123 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitf2df85fc654197ddbef4a8d70337abc1
+class ComposerStaticInit7787bc711476e12ee74f0e7e502fdce5
 {
     public static $files = array (
-        '2bbd26661303cdaca182788552eea29b' => __DIR__ . '/../..' . '/dist/AAUTH/GuzzleHttp/functions_include.php',
-        '084d1c7c5e559b9aee274ca8cb026673' => __DIR__ . '/../..' . '/dist/AAUTH/GuzzleHttp/Psr7/functions_include.php',
-        'cf7bd8006703c6b40255c3f5184b944d' => __DIR__ . '/../..' . '/dist/AAUTH/GuzzleHttp/Promise/functions_include.php',
+        '3937806105cc8e221b8fa8db5b70d2f2' => __DIR__ . '/..' . '/wp-cli/mustangostang-spyc/includes/functions.php',
+        'be01b9b16925dcb22165c40b46681ac6' => __DIR__ . '/..' . '/wp-cli/php-cli-tools/lib/cli/cli.php',
+        'ffb465a494c3101218c4417180c2c9a2' => __DIR__ . '/..' . '/wp-cli/i18n-command/i18n-command.php',
     );
 
     public static $prefixLengthsPsr4 = array (
+        'W' => 
+        array (
+            'WP_CLI\\I18n\\' => 12,
+        ),
+        'S' => 
+        array (
+            'Symfony\\Component\\Finder\\' => 25,
+        ),
+        'P' => 
+        array (
+            'Peast\\test\\' => 11,
+            'Peast\\' => 6,
+        ),
+        'M' => 
+        array (
+            'Mustangostang\\' => 14,
+        ),
+        'G' => 
+        array (
+            'Gettext\\Languages\\' => 18,
+            'Gettext\\' => 8,
+        ),
+        'D' => 
+        array (
+            'Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\' => 55,
+        ),
         'A' => 
         array (
             'Aivec\\Welcart\\ProprietaryAuthentication\\' => 40,
-            'AAUTH\\' => 6,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'WP_CLI\\I18n\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/wp-cli/i18n-command/src',
+        ),
+        'Symfony\\Component\\Finder\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/finder',
+        ),
+        'Peast\\test\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/mck89/peast/test/Peast',
+        ),
+        'Peast\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/mck89/peast/lib/Peast',
+        ),
+        'Mustangostang\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/wp-cli/mustangostang-spyc/src',
+        ),
+        'Gettext\\Languages\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/gettext/languages/src',
+        ),
+        'Gettext\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/gettext/gettext/src',
+        ),
+        'Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dealerdirect/phpcodesniffer-composer-installer/src',
+        ),
         'Aivec\\Welcart\\ProprietaryAuthentication\\' => 
         array (
             0 => __DIR__ . '/../..' . '/',
         ),
-        'AAUTH\\' => 
+    );
+
+    public static $prefixesPsr0 = array (
+        'c' => 
         array (
-            0 => __DIR__ . '/../..' . '/dist/AAUTH',
+            'cli' => 
+            array (
+                0 => __DIR__ . '/..' . '/wp-cli/php-cli-tools/lib',
+            ),
+        ),
+        'W' => 
+        array (
+            'WP_CLI' => 
+            array (
+                0 => __DIR__ . '/..' . '/wp-cli/wp-cli/php',
+            ),
+        ),
+        'R' => 
+        array (
+            'Requests' => 
+            array (
+                0 => __DIR__ . '/..' . '/rmccue/requests/library',
+            ),
+        ),
+        'M' => 
+        array (
+            'Mustache' => 
+            array (
+                0 => __DIR__ . '/..' . '/mustache/mustache/src',
+            ),
         ),
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitf2df85fc654197ddbef4a8d70337abc1::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitf2df85fc654197ddbef4a8d70337abc1::$prefixDirsPsr4;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit7787bc711476e12ee74f0e7e502fdce5::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit7787bc711476e12ee74f0e7e502fdce5::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit7787bc711476e12ee74f0e7e502fdce5::$prefixesPsr0;
 
         }, null, ClassLoader::class);
     }
