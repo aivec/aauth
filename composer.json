@@ -8,7 +8,9 @@
       "email": "evandanielshaw@gmail.com"
     }
   ],
-  "require": {},
+  "require": {
+    "yahnis-elsts/plugin-update-checker": "^4.9"
+  },
   "require-dev": {
     "wp-cli/i18n-command": "^2.2",
     "aivec/phpcs-wp": "^1.0"

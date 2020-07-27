@@ -57,7 +57,7 @@ class Sellers {
      */
     private $default_aauth_meta = [
         'aivec' => [
-            'dev' => [
+            'staging' => [
                 'origin' => 'https://aivec.co.jp',
                 'api_endpoint' => 'https://www.aivec.co.jp/plugin_test/',
                 'seller_site' => 'aivec.co.jp/plugin_test',
@@ -69,7 +69,7 @@ class Sellers {
             ],
         ],
         'welcart' => [
-            'dev' => [
+            'staging' => [
                 'origin' => 'https://php7.welcart.org',
                 'api_endpoint' => 'https://php7.welcart.org/',
                 'seller_site' => 'php7.welcart.org',
@@ -96,6 +96,11 @@ class Sellers {
         $this->default_provider = $default_provider;
         $this->sellers = $sellers;
         $this->meta = array_merge($this->default_aauth_meta, $aauth_meta);
+        $localDevMeta = $this->getLocalDevMeta();
+        foreach ($this->meta as $provider => $envs) {
+            $localDevMeta['seller_site'] = $localDevMeta['seller_site'] . ' (' . $provider . ')';
+            $this->meta[$provider]['dev'] = $localDevMeta;
+        }
         $this->validateSellers();
         $this->validateDefaultProvider();
         $this->validateAauthMeta();
@@ -187,6 +192,63 @@ class Sellers {
     }
 
     /**
+     * Authentication meta for local development
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return array
+     */
+    public function getLocalDevMeta() {
+        $opts = [];
+        $bridgeIp = isset($_ENV['DOCKER_BRIDGE_IP']) ? 'http://' . $_ENV['DOCKER_BRIDGE_IP'] : '';
+        $port = isset($_ENV['UPDATE_CONTAINER_PORT']) ? $_ENV['UPDATE_CONTAINER_PORT'] : '';
+        $opts['origin'] = !empty($bridgeIp) ? $bridgeIp . ':' . $port : '';
+        $opts['endpoint'] = !empty($bridgeIp) ? $bridgeIp . ':' . $port : '';
+        $opts['seller_site'] = !empty($bridgeIp) ? $bridgeIp . ':' . $port : '';
+
+        return $opts;
+    }
+
+    /**
+     * Returns meta options array
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @param string|null $provider Setting this will override what is saved in the database. Default: `null`
+     * @return array
+     */
+    public function getMetaOpts($provider = null) {
+        $aoptions = get_option(Auth::OPTIONS_KEY);
+        $opts = isset($aoptions[$this->aauth->getSku()]) ? $aoptions[$this->aauth->getSku()] : [];
+        $opts['provider'] = isset($opts['provider']) ? $opts['provider'] : $this->default_provider;
+        if ($provider !== null && isset($this->meta[$provider])) {
+            $opts['provider'] = $provider;
+        }
+
+        if (isset($_ENV['AVC_NODE_ENV'])) {
+            switch ($_ENV['AVC_NODE_ENV']) {
+                case 'development':
+                    $opts = $this->meta[$opts['provider']]['dev'];
+                    break;
+                case 'staging':
+                    if (isset($this->meta[$opts['provider']]['staging'])) {
+                        $dev = $this->meta[$opts['provider']]['staging'];
+                        $opts['origin'] = isset($dev['origin']) ? $dev['origin'] : '';
+                        $opts['endpoint'] = isset($dev['api_endpoint']) ? $dev['api_endpoint'] : '';
+                        $opts['seller_site'] = isset($dev['seller_site']) ? $dev['seller_site'] : '';
+                    }
+                    break;
+                default:
+                    $prod = $this->meta[$opts['provider']]['prod'];
+                    $opts['origin'] = isset($prod['origin']) ? $prod['origin'] : '';
+                    $opts['endpoint'] = isset($prod['api_endpoint']) ? $prod['api_endpoint'] : '';
+                    $opts['seller_site'] = isset($prod['seller_site']) ? $prod['seller_site'] : '';
+                    break;
+            }
+        }
+
+        return $opts;
+    }
+
+    /**
      * Set default seller options
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
@@ -194,33 +256,7 @@ class Sellers {
      */
     public function setDefaultSellerOptions() {
         $aoptions = get_option(Auth::OPTIONS_KEY);
-        $opts = $aoptions[$this->aauth->getSku()];
-        $opts['provider'] = isset($opts['provider']) ? $opts['provider'] : $this->default_provider;
-        $opts['meta'] = $this->meta;
-        if (isset($_ENV['AVC_NODE_ENV']) &&
-            $_ENV['AVC_NODE_ENV'] === 'development' &&
-            isset($opts['meta'][$opts['provider']]['dev'])
-        ) {
-            $dev = $opts['meta'][$opts['provider']]['dev'];
-            $opts['origin'] = isset($dev['origin']) ? $dev['origin'] : '';
-            $opts['endpoint'] = isset($dev['api_endpoint']) ? $dev['api_endpoint'] : '';
-            $opts['seller_site'] = isset($dev['seller_site']) ? $dev['seller_site'] : '';
-            $aoptions[$this->aauth->getSku()] = $opts;
-            update_option(Auth::OPTIONS_KEY, $aoptions);
-            return;
-        } elseif (isset($opts['meta'][$opts['provider']]['prod'])) {
-            $prod = $opts['meta'][$opts['provider']]['prod'];
-            $opts['origin'] = isset($prod['origin']) ? $prod['origin'] : '';
-            $opts['endpoint'] = isset($prod['api_endpoint']) ? $prod['api_endpoint'] : '';
-            $opts['seller_site'] = isset($prod['seller_site']) ? $prod['seller_site'] : '';
-            $aoptions[$this->aauth->getSku()] = $opts;
-            update_option(Auth::OPTIONS_KEY, $aoptions);
-            return;
-        }
-
-        $opts['origin'] = '';
-        $opts['endpoint'] = '';
-        $opts['seller_site'] = '';
+        $opts = $this->getMetaOpts();
         $aoptions[$this->aauth->getSku()] = $opts;
         update_option(Auth::OPTIONS_KEY, $aoptions);
     }
@@ -228,7 +264,7 @@ class Sellers {
     /**
      * Update provider from user selection on settlement settings page
      *
-     * Since 'admin_notices' fires before the settlement options are updated, it will still display
+     * Since `admin_notices` fires before the settlement options are updated, it will still display
      * the same nag message after options are changed so long as the page has not been refreshed.
      * To get around this, we update the auth provider selected from the settlement settings page
      * in this hook before displaying the nag message so that the correct result is displayed immediately.
@@ -247,41 +283,18 @@ class Sellers {
             $_POST = $usces->stripslashes_deep_post($_POST);
             $provider = isset($_POST[$this->aauth->getSku()]['aauth_provider']) ? sanitize_text_field(wp_unslash($_POST[$this->aauth->getSku()]['aauth_provider'])) : '';
             if (!empty($provider)) {
-                $opts = get_option(Auth::OPTIONS_KEY);
-                $opts[$this->aauth->getSku()]['provider'] = $provider;
-                $meta = $opts[$this->aauth->getSku()]['meta'][$provider]['prod'];
-                if (isset($_ENV['AVC_NODE_ENV']) &&
-                    $_ENV['AVC_NODE_ENV'] === 'development' &&
-                    isset($opts[$this->aauth->getSku()]['meta'][$provider]['dev'])
-                ) {
-                    $meta = $opts[$this->aauth->getSku()]['meta'][$provider]['dev'];
-                }
+                $aoptions = get_option(Auth::OPTIONS_KEY);
+                $opts = $this->getMetaOpts($provider);
+
                 // update origin/endpoint so that authentication is retried on the proper endpoint
-                $opts[$this->aauth->getSku()]['origin'] = isset($meta['origin']) ? $meta['origin'] : '';
-                $opts[$this->aauth->getSku()]['endpoint'] = isset($meta['api_endpoint']) ? $meta['api_endpoint'] : '';
-                $opts[$this->aauth->getSku()]['seller_site'] = isset($meta['seller_site']) ? $meta['seller_site'] : '';
-                $opts[$this->aauth->getSku()]['asmp_ved'] = false;
-                update_option(Auth::OPTIONS_KEY, $opts);
+                $aoptions[$this->aauth->getSku()] = $opts;
+                $aoptions[$this->aauth->getSku()]['asmp_ved'] = false;
+                update_option(Auth::OPTIONS_KEY, $aoptions);
 
                 // retry authentication with new selections
                 $this->aauth->processAuthData();
             }
         }
-    }
-
-    /**
-     * Gets seller meta given a seller
-     *
-     * @author Evan D Shaw <evandanielshaw@gmail.com>
-     * @param string $seller
-     * @return array
-     */
-    public function getSellerMeta($seller) {
-        if (isset($_ENV['AVC_NODE_ENV']) && $_ENV['AVC_NODE_ENV'] === 'development') {
-            return $this->meta[$seller]['dev'];
-        }
-
-        return $this->meta[$seller]['prod'];
     }
 
     /**
@@ -308,7 +321,7 @@ class Sellers {
                     <td>
                         <div>
                         <?php foreach ($this->meta as $seller => $meta) : ?>
-                            <?php $m = $this->getSellerMeta($seller); ?>
+                            <?php $m = $this->getMetaOpts($seller); ?>
                             <label>
                                 <input
                                     name="<?php echo $this->aauth->getSku() ?>[aauth_provider]"

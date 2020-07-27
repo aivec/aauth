@@ -14,6 +14,20 @@ class Scheduler extends Auth implements Scaffold {
     private $nag_display_name;
 
     /**
+     * Absolute path to the plugin entry file
+     *
+     * @var string
+     */
+    private $plugin_file;
+
+    /**
+     * The name of the plugin folder
+     *
+     * @var string
+     */
+    private $plugin_slug;
+
+    /**
      * Schedules cron if authenticated, otherwise sends cURL auth request.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
@@ -21,8 +35,9 @@ class Scheduler extends Auth implements Scaffold {
      * @param string $product_version
      * @param string $nag_display_name
      * @param string $plugin_file name of plugin entry file INCLUDING absolute path
+     * @param string $plugin_slug name of the plugin folder
      */
-    public function __construct($sku, $product_version, $nag_display_name, $plugin_file) {
+    public function __construct($sku, $product_version, $nag_display_name, $plugin_file, $plugin_slug) {
         $mopath = __DIR__ . '/languages/aauth-' . get_locale() . '.mo';
         if (file_exists($mopath)) {
             load_textdomain('aauth', $mopath);
@@ -32,6 +47,8 @@ class Scheduler extends Auth implements Scaffold {
         parent::__construct($sku, $product_version);
 
         $this->nag_display_name = $nag_display_name;
+        $this->plugin_file = $plugin_file;
+        $this->plugin_slug = $plugin_slug;
 
         add_action('admin_notices', [$this, 'nag']);
         add_action($sku . '_validate_install', [$this, 'cronValidateInstall']);
@@ -50,7 +67,40 @@ class Scheduler extends Auth implements Scaffold {
             }
         }
 
-        register_deactivation_hook($plugin_file, [$this, 'clearCron']);
+        register_deactivation_hook($this->plugin_file, [$this, 'clearCron']);
+    }
+
+    /**
+     * Checks for plugin updates at the appropriate endpoint every hour
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return void
+     */
+    public function initUpdateChecker() {
+        $updateEndpoint = trim($this->getEndpoint(), '/');
+        if (isset($_ENV['AVC_NODE_ENV'])) {
+            if ($_ENV['AVC_NODE_ENV'] === 'development') {
+                $bridgeIp = isset($_ENV['DOCKER_BRIDGE_IP']) ? $_ENV['DOCKER_BRIDGE_IP'] : '';
+                $port = isset($_ENV['UPDATE_CONTAINER_PORT']) ? $_ENV['UPDATE_CONTAINER_PORT'] : '';
+                if (!empty($bridgeIp) && !empty($port)) {
+                    $updateEndpoint = 'http://' . $bridgeIp . ':' . $port;
+                }
+            }
+        }
+        $updateChecker = \Puc_v4_Factory::buildUpdateChecker(
+            add_query_arg(
+                ['update_action' => 'get_metadata', 'update_slug' => $this->plugin_slug],
+                $updateEndpoint . '/wp-update-server/'
+            ),
+            $this->plugin_file,
+            $this->plugin_slug,
+            1
+        );
+        $updateChecker->addQueryArgFilter(function ($queryArgs) {
+            $queryArgs['itemcode'] = $this->sku;
+            $queryArgs['domain'] = $this->getHost();
+            return $queryArgs;
+        });
     }
 
     /**
