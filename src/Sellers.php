@@ -98,8 +98,8 @@ class Sellers {
         $this->meta = array_merge($this->default_aauth_meta, $aauth_meta);
         $localDevMeta = $this->getLocalDevMeta();
         foreach ($this->meta as $provider => $envs) {
-            $localDevMeta['seller_site'] = $localDevMeta['seller_site'] . ' (' . $provider . ')';
             $this->meta[$provider]['dev'] = $localDevMeta;
+            $this->meta[$provider]['dev']['seller_site'] = $localDevMeta['seller_site'] . ' (' . $provider . ')';
         }
         $this->validateSellers();
         $this->validateDefaultProvider();
@@ -223,26 +223,26 @@ class Sellers {
             $opts['provider'] = $provider;
         }
 
-        if (isset($_ENV['AVC_NODE_ENV'])) {
-            switch ($_ENV['AVC_NODE_ENV']) {
-                case 'development':
-                    $opts = $this->meta[$opts['provider']]['dev'];
-                    break;
-                case 'staging':
-                    if (isset($this->meta[$opts['provider']]['staging'])) {
-                        $dev = $this->meta[$opts['provider']]['staging'];
-                        $opts['origin'] = isset($dev['origin']) ? $dev['origin'] : '';
-                        $opts['endpoint'] = isset($dev['api_endpoint']) ? $dev['api_endpoint'] : '';
-                        $opts['seller_site'] = isset($dev['seller_site']) ? $dev['seller_site'] : '';
-                    }
-                    break;
-                default:
-                    $prod = $this->meta[$opts['provider']]['prod'];
-                    $opts['origin'] = isset($prod['origin']) ? $prod['origin'] : '';
-                    $opts['endpoint'] = isset($prod['api_endpoint']) ? $prod['api_endpoint'] : '';
-                    $opts['seller_site'] = isset($prod['seller_site']) ? $prod['seller_site'] : '';
-                    break;
-            }
+        $env = isset($_ENV['AVC_NODE_ENV']) ? $_ENV['AVC_NODE_ENV'] : 'prod';
+        switch ($env) {
+            case 'development':
+                $opts = $this->meta[$opts['provider']]['dev'];
+                break;
+            case 'staging':
+                if (isset($this->meta[$opts['provider']]['staging'])) {
+                    $staging = $this->meta[$opts['provider']]['staging'];
+                    $opts['origin'] = isset($staging['origin']) ? $staging['origin'] : '';
+                    $opts['endpoint'] = isset($staging['api_endpoint']) ? $staging['api_endpoint'] : '';
+                    $opts['seller_site'] = isset($staging['seller_site']) ? $staging['seller_site'] : '';
+                }
+                break;
+            case 'prod':
+            default:
+                $prod = $this->meta[$opts['provider']]['prod'];
+                $opts['origin'] = isset($prod['origin']) ? $prod['origin'] : '';
+                $opts['endpoint'] = isset($prod['api_endpoint']) ? $prod['api_endpoint'] : '';
+                $opts['seller_site'] = isset($prod['seller_site']) ? $prod['seller_site'] : '';
+                break;
         }
 
         return $opts;
