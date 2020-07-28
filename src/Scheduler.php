@@ -89,7 +89,12 @@ class Scheduler extends Auth implements Scaffold {
         }
         $updateChecker = \Puc_v4_Factory::buildUpdateChecker(
             add_query_arg(
-                ['update_action' => 'get_metadata', 'update_slug' => $this->plugin_slug],
+                [
+                    'update_action' => 'get_metadata',
+                    'update_slug' => $this->plugin_slug,
+                    'itemcode' => $this->sku,
+                    'domain' => $this->getHost(),
+                ],
                 $updateEndpoint . '/wp-update-server/'
             ),
             $this->plugin_file,
