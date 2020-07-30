@@ -226,7 +226,10 @@ class Sellers {
         $env = isset($_ENV['AVC_NODE_ENV']) ? $_ENV['AVC_NODE_ENV'] : 'prod';
         switch ($env) {
             case 'development':
-                $opts = $this->meta[$opts['provider']]['dev'];
+                $dev = $this->meta[$opts['provider']]['dev'];
+                $opts['origin'] = $dev['origin'];
+                $opts['endpoint'] = $dev['endpoint'];
+                $opts['seller_site'] = $dev['seller_site'];
                 break;
             case 'staging':
                 if (isset($this->meta[$opts['provider']]['staging'])) {
@@ -287,7 +290,10 @@ class Sellers {
                 $opts = $this->getMetaOpts($provider);
 
                 // update origin/endpoint so that authentication is retried on the proper endpoint
-                $aoptions[$this->aauth->getSku()] = $opts;
+                $aoptions[$this->aauth->getSku()]['provider'] = $provider;
+                $aoptions[$this->aauth->getSku()]['origin'] = $opts['origin'];
+                $aoptions[$this->aauth->getSku()]['endpoint'] = $opts['endpoint'];
+                $aoptions[$this->aauth->getSku()]['seller_site'] = $opts['seller_site'];
                 $aoptions[$this->aauth->getSku()]['asmp_ved'] = false;
                 update_option(Auth::OPTIONS_KEY, $aoptions);
 
