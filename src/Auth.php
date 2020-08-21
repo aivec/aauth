@@ -8,15 +8,15 @@ use InvalidArgumentException;
  */
 class Auth {
 
-    const VERSION = '4.0.1';
+    const VERSION = '6.0.0';
     const OPTIONS_KEY = 'asmp_authdata';
 
     /**
-     * The SKU of this plugin/theme
+     * The `productUniqueId` of this plugin/theme
      *
      * @var string
      */
-    protected $sku;
+    protected $productUniqueId;
 
     /**
      * The version number of this plugin/theme
@@ -36,11 +36,11 @@ class Auth {
      * Initialize this class and sets member variables.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
-     * @param string $sku
+     * @param string $productUniqueId
      * @param string $product_version
      */
-    public function __construct($sku, $product_version) {
-        $this->sku = $sku;
+    public function __construct($productUniqueId, $product_version) {
+        $this->productUniqueId = $productUniqueId;
         $this->product_version = $product_version;
         header('Access-Control-Allow-Origin: ' . $this->getOrigin(), false);
     }
@@ -82,7 +82,7 @@ class Auth {
         ];
 
         $curl_opts = [
-            CURLOPT_URL            => trim($this->getEndpoint(), '/') . "/wcexasmp/authenticate/{$this->sku}",
+            CURLOPT_URL            => trim($this->getEndpoint(), '/') . "/wcexcptm/authenticate/{$this->productUniqueId}",
             CURLOPT_REFERER        => $this->getHost(),
             CURLOPT_HEADER         => false,
             CURLOPT_RETURNTRANSFER => true,
@@ -154,14 +154,14 @@ class Auth {
     }
 
     /**
-     * Returns options for the SKU of this instance
+     * Returns options for the `productUniqueId` of this instance
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @return array
      */
     public function getOptions() {
         $asmp_options = get_option(self::OPTIONS_KEY);
-        return $asmp_options[$this->sku];
+        return $asmp_options[$this->productUniqueId];
     }
 
     /**
@@ -172,7 +172,7 @@ class Auth {
      */
     public function setAsmpVED($asmp_ved) {
         $asmp_options = get_option(self::OPTIONS_KEY);
-        $asmp_options[$this->sku]['asmp_ved'] = $asmp_ved;
+        $asmp_options[$this->productUniqueId]['asmp_ved'] = $asmp_ved;
         update_option(self::OPTIONS_KEY, $asmp_options);
     }
 
@@ -184,7 +184,7 @@ class Auth {
      */
     public function setNagErrorMessage($error_message) {
         $asmp_options = get_option(self::OPTIONS_KEY);
-        $asmp_options[$this->sku]['nag_error_message'] = $error_message;
+        $asmp_options[$this->productUniqueId]['nag_error_message'] = $error_message;
         update_option(self::OPTIONS_KEY, $asmp_options);
     }
 
@@ -213,7 +213,7 @@ class Auth {
      */
     public function getAsmpVED() {
         $asmp_options = get_option(self::OPTIONS_KEY);
-        return isset($asmp_options[$this->sku]['asmp_ved']) ? $asmp_options[$this->sku]['asmp_ved'] : false;
+        return isset($asmp_options[$this->productUniqueId]['asmp_ved']) ? $asmp_options[$this->productUniqueId]['asmp_ved'] : false;
     }
 
     /**
@@ -223,18 +223,18 @@ class Auth {
      */
     public function getNagErrorMessage() {
         $asmp_options = get_option(self::OPTIONS_KEY);
-        return isset($asmp_options[$this->sku]['nag_error_message']) ?
-            $asmp_options[$this->sku]['nag_error_message']
+        return isset($asmp_options[$this->productUniqueId]['nag_error_message']) ?
+            $asmp_options[$this->productUniqueId]['nag_error_message']
             : '';
     }
 
     /**
-     * Getter for SKU member var
+     * Getter for `productUniqueId` member var
      *
      * @return string
      */
-    public function getSku() {
-        return $this->sku;
+    public function getProductUniqueId() {
+        return $this->productUniqueId;
     }
 
     /**

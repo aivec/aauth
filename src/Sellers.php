@@ -217,7 +217,7 @@ class Sellers {
      */
     public function getMetaOpts($provider = null) {
         $aoptions = get_option(Auth::OPTIONS_KEY);
-        $opts = isset($aoptions[$this->aauth->getSku()]) ? $aoptions[$this->aauth->getSku()] : [];
+        $opts = isset($aoptions[$this->aauth->getProductUniqueId()]) ? $aoptions[$this->aauth->getProductUniqueId()] : [];
         $opts['provider'] = isset($opts['provider']) ? $opts['provider'] : $this->default_provider;
         if ($provider !== null && isset($this->meta[$provider])) {
             $opts['provider'] = $provider;
@@ -260,7 +260,7 @@ class Sellers {
     public function setDefaultSellerOptions() {
         $aoptions = get_option(Auth::OPTIONS_KEY);
         $opts = $this->getMetaOpts();
-        $aoptions[$this->aauth->getSku()] = $opts;
+        $aoptions[$this->aauth->getProductUniqueId()] = $opts;
         update_option(Auth::OPTIONS_KEY, $aoptions);
     }
 
@@ -284,17 +284,17 @@ class Sellers {
             check_admin_referer('admin_settlement', 'wc_nonce');
 
             $_POST = $usces->stripslashes_deep_post($_POST);
-            $provider = isset($_POST[$this->aauth->getSku()]['aauth_provider']) ? sanitize_text_field(wp_unslash($_POST[$this->aauth->getSku()]['aauth_provider'])) : '';
+            $provider = isset($_POST[$this->aauth->getProductUniqueId()]['aauth_provider']) ? sanitize_text_field(wp_unslash($_POST[$this->aauth->getProductUniqueId()]['aauth_provider'])) : '';
             if (!empty($provider)) {
                 $aoptions = get_option(Auth::OPTIONS_KEY);
                 $opts = $this->getMetaOpts($provider);
 
                 // update origin/endpoint so that authentication is retried on the proper endpoint
-                $aoptions[$this->aauth->getSku()]['provider'] = $provider;
-                $aoptions[$this->aauth->getSku()]['origin'] = $opts['origin'];
-                $aoptions[$this->aauth->getSku()]['endpoint'] = $opts['endpoint'];
-                $aoptions[$this->aauth->getSku()]['seller_site'] = $opts['seller_site'];
-                $aoptions[$this->aauth->getSku()]['asmp_ved'] = false;
+                $aoptions[$this->aauth->getProductUniqueId()]['provider'] = $provider;
+                $aoptions[$this->aauth->getProductUniqueId()]['origin'] = $opts['origin'];
+                $aoptions[$this->aauth->getProductUniqueId()]['endpoint'] = $opts['endpoint'];
+                $aoptions[$this->aauth->getProductUniqueId()]['seller_site'] = $opts['seller_site'];
+                $aoptions[$this->aauth->getProductUniqueId()]['asmp_ved'] = false;
                 update_option(Auth::OPTIONS_KEY, $aoptions);
 
                 // retry authentication with new selections
@@ -330,9 +330,9 @@ class Sellers {
                             <?php $m = $this->getMetaOpts($seller); ?>
                             <label>
                                 <input
-                                    name="<?php echo $this->aauth->getSku() ?>[aauth_provider]"
+                                    name="<?php echo $this->aauth->getProductUniqueId() ?>[aauth_provider]"
                                     type="radio"
-                                    id="aauth_provider_<?php echo esc_attr($this->aauth->getSku() . $seller) ?>"
+                                    id="aauth_provider_<?php echo esc_attr($this->aauth->getProductUniqueId() . $seller) ?>"
                                     value="<?php echo esc_attr($seller) ?>"
                                     <?php echo $opts['provider'] === $seller ? 'checked' : ''; ?>
                                 />

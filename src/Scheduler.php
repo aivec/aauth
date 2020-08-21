@@ -21,49 +21,40 @@ class Scheduler extends Auth implements Scaffold {
     private $plugin_file;
 
     /**
-     * The name of the plugin folder
-     *
-     * @var string
-     */
-    private $plugin_slug;
-
-    /**
      * Schedules cron if authenticated, otherwise sends cURL auth request.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
-     * @param string $sku
+     * @param string $productUniqueId
      * @param string $product_version
      * @param string $nag_display_name
      * @param string $plugin_file name of plugin entry file INCLUDING absolute path
-     * @param string $plugin_slug name of the plugin folder
      */
-    public function __construct($sku, $product_version, $nag_display_name, $plugin_file, $plugin_slug) {
+    public function __construct($productUniqueId, $product_version, $nag_display_name, $plugin_file) {
         $mopath = __DIR__ . '/languages/aauth-' . get_locale() . '.mo';
         if (file_exists($mopath)) {
             load_textdomain('aauth', $mopath);
         } else {
             load_textdomain('aauth', __DIR__ . '/languages/aauth-en.mo');
         }
-        parent::__construct($sku, $product_version);
+        parent::__construct($productUniqueId, $product_version);
 
         $this->nag_display_name = $nag_display_name;
         $this->plugin_file = $plugin_file;
-        $this->plugin_slug = $plugin_slug;
 
         add_action('admin_notices', [$this, 'nag']);
-        add_action($sku . '_validate_install', [$this, 'cronValidateInstall']);
+        add_action($productUniqueId . '_validate_install', [$this, 'cronValidateInstall']);
         if ($this->authenticated() === false) {
             $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
             if ($action !== 'heartbeat') {
                 $this->processAuthData();
             }
         } else {
-            $cron = wp_next_scheduled($sku . '_validate_install');
+            $cron = wp_next_scheduled($productUniqueId . '_validate_install');
             if (!$cron) {
                 $date = new \DateTime('03:00', new \DateTimeZone('Asia/Tokyo'));
                 $date = $date->add(new \DateInterval('P1D'));
                 $timestamp = $date->getTimestamp();
-                wp_schedule_event($timestamp, 'daily', $sku . '_validate_install');
+                wp_schedule_event($timestamp, 'daily', $productUniqueId . '_validate_install');
             }
         }
 
@@ -90,19 +81,18 @@ class Scheduler extends Auth implements Scaffold {
         $updateChecker = \Puc_v4_Factory::buildUpdateChecker(
             add_query_arg(
                 [
-                    'update_action' => 'get_metadata',
-                    'update_slug' => $this->plugin_slug,
-                    'itemcode' => $this->sku,
+                    'wcexcptm_update_action' => 'get_metadata',
+                    'wcexcptm_cptitem_unique_id' => $this->productUniqueId,
                     'domain' => $this->getHost(),
                 ],
                 $updateEndpoint . '/wp-update-server/'
             ),
             $this->plugin_file,
-            $this->plugin_slug,
+            '',
             1
         );
         $updateChecker->addQueryArgFilter(function ($queryArgs) {
-            $queryArgs['itemcode'] = $this->sku;
+            $queryArgs['wcexcptm_cptitem_unique_id'] = $this->productUniqueId;
             $queryArgs['domain'] = $this->getHost();
             return $queryArgs;
         });
@@ -130,11 +120,11 @@ class Scheduler extends Auth implements Scaffold {
         if ($result === 'success') {
             $this->setAsmpVED(true);
             $this->setNagErrorMessage('');
-            do_action('aauth_' . $this->sku . '_on_success');
+            do_action('aauth_' . $this->productUniqueId . '_on_success');
         } else {
             $this->setAsmpVED(false);
             $this->setNagErrorMessage($result);
-            do_action('aauth_' . $this->sku . '_on_failure');
+            do_action('aauth_' . $this->productUniqueId . '_on_failure');
         }
     }
 
@@ -168,6 +158,6 @@ class Scheduler extends Auth implements Scaffold {
      * @return void
      */
     public function clearCron() {
-        wp_clear_scheduled_hook($this->sku . '_validate_install');
+        wp_clear_scheduled_hook($this->productUniqueId . '_validate_install');
     }
 }
