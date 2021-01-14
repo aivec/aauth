@@ -1,4 +1,5 @@
 <?php
+
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
 use InvalidArgumentException;
@@ -6,8 +7,8 @@ use InvalidArgumentException;
 /**
  * Plugin/theme Sellers class for adding/subtracting sellers
  */
-class Sellers {
-
+class Sellers
+{
     /**
      * Aivec proprietary authentication instance
      *

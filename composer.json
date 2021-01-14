@@ -13,11 +13,11 @@
   },
   "require-dev": {
     "wp-cli/i18n-command": "^2.2",
-    "aivec/phpcs-wp": "^1.0"
+    "aivec/phpcs-wp": "^2.0"
   },
   "scripts": {
-    "lint": "phpcs --standard=Aivec --extensions=php src",
-    "lint:fix": "phpcbf --standard=Aivec --extensions=php src",
+    "lint": "phpcs -ps --standard=AivecWP-5 --extensions=php src",
+    "lint:fix": "phpcbf -ps --standard=AivecWP-5 --extensions=php src",
     "i18n:update-pos": [
       "wp i18n make-pot --domain=aauth . src/languages/messages.pot",
       "find ./src/languages -name \"*.po\" | xargs -I % msgmerge -o % % src/languages/messages.pot"

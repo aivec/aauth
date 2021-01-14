@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Aivec LLC.\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-17T15:00:17+09:00\n"
+"POT-Creation-Date: 2021-01-14T17:54:29+09:00\n"
 "PO-Revision-Date: 2019-06-06 16:02+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -13,21 +13,19 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Poedit 2.2.1\n"
 
-#. translators: the name of the company whose server is being called
-#: src/Auth.php:104
-msgid "There was a problem accessing %s server. Please try again."
-msgstr ""
-"%sのサーバーにアクセスする際に問題が発生しました。もう一度お試しください。"
-
 #. translators: 1: formatted plugin name, 2: response message from server
-#: src/Scheduler.php:100
+#: src/Scheduler.php:166
 msgid "%1$s： %2$s"
 msgstr "%1$s (認証確認)： %2$s"
 
-#: src/Sellers.php:301
+#: src/Sellers.php:321
 msgid "Authentication"
 msgstr "認証確認"
 
-#: src/Sellers.php:306
+#: src/Sellers.php:326
 msgid "Please choose your provider"
 msgstr "購入したサイトを選択してください"
+
+#~ msgid "There was a problem accessing %s server. Please try again."
+#~ msgstr ""
+#~ "%sのサーバーにアクセスする際に問題が発生しました。もう一度お試しください。"

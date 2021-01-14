@@ -1,4 +1,5 @@
 <?php
+
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
 use InvalidArgumentException;
@@ -6,9 +7,9 @@ use InvalidArgumentException;
 /**
  * Proprietary authentication API calls for Aivec plugins/themes.
  */
-class Auth {
-
-    const VERSION = '6.0.0';
+class Auth
+{
+    const VERSION = '7.0.0';
     const OPTIONS_KEY = 'asmp_authdata';
 
     /**
@@ -24,7 +25,7 @@ class Auth {
      * @var string
      */
     protected $product_version;
-   
+
     /**
      * Aivec proprietary authentication Sellers instance
      *
@@ -46,8 +47,14 @@ class Auth {
     }
 
     /**
-     * Creates `cURL` instance that attempts to validate a proprietary theme/plugin with Aivec's
-     * validation plugin.
+     * Creates `cURL` instance that attempts to authenticate a commercial plugin/theme by calling
+     * the authentication API of `WCEX Commercial Plugin/Theme Manager`
+     *
+     * If authentication fails because of a network error or the network request succeeds but the
+     * response is malformed, this method will act as if authentication was successful. The terms and
+     * conditions of a plugin/theme are returned from the server in this request, so it is impossible to know
+     * whether the usage of a plugin is restricted by domain, whether only updates are restricted by domain,
+     * or whether there is no restriction at all. This is why we fallback to 'success'.
      *
      * @author Evan D Shaw <evandanielshaw@gmail.com>
      * @global string $wp_version
@@ -59,11 +66,15 @@ class Auth {
 
         $server_info = null;
         if ($wpdb->use_mysqli) {
+            // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysqli_get_server_info
             $server_info = mysqli_get_server_info($wpdb->dbh);
         } else {
+            // phpcs:disable WordPress.DB.RestrictedFunctions.mysql_mysql_get_server_info
+            // phpcs:disable PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
             $server_info = mysql_get_server_info($wpdb->dbh);
         }
-        
+        // phpcs:enable
+
         $domain = $this->getHost();
         $reqbody = [
             'payload' => json_encode(
@@ -82,38 +93,44 @@ class Auth {
         ];
 
         $curl_opts = [
-            CURLOPT_URL            => trim($this->getEndpoint(), '/') . "/wcexcptm/authenticate/{$this->productUniqueId}",
-            CURLOPT_REFERER        => $this->getHost(),
-            CURLOPT_HEADER         => false,
+            CURLOPT_URL => trim($this->getEndpoint(), '/') . "/wcexcptm/authenticate/{$this->productUniqueId}",
+            CURLOPT_REFERER => $this->getHost(),
+            CURLOPT_HEADER => false,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => http_build_query($reqbody),
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($reqbody),
         ];
-        
+
         $ch = curl_init();
         curl_setopt_array($ch, $curl_opts);
-        $result = json_decode(curl_exec($ch), true);
+        $res = json_decode(curl_exec($ch), true);
         $errno = curl_errno($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
 
-        $opts = $this->getOptions();
-        $seller = isset($opts['provider']) ? $opts['provider'] : 'Aivec';
-        $defaulte = '* ' . sprintf(
-            // translators: the name of the company whose server is being called
-            __('There was a problem accessing %s server. Please try again.', 'aauth'),
-            $seller
-        );
+        $fallbackRes = [
+            'result' => 'success',
+            'error' => null,
+            'cptItem' => null,
+        ];
 
-        if (!empty($errno) || $httpcode >= 400) {
-            if (is_array($result)) {
-                return isset($result['message']) ? $result['message'] : $defaulte;
-            }
-
-            return $defaulte;
+        if (!is_array($res)) {
+            // Should be an array. Response from server is malformed.
+            return $fallbackRes;
+        }
+        if (!empty($errno)) {
+            // cURL error occured. Endpoint not reached.
+            return $fallbackRes;
         }
 
-        return $result;
+        if ($res['result'] !== 'success' && $res['result'] !== 'error') {
+            // result should be one or the other
+            return $fallbackRes;
+        }
+
+        $res['error'] = isset($res['error']) ? $res['error'] : null;
+        $res['cptItem'] = isset($res['cptItem']) ? $res['cptItem'] : null;
+
+        return $res;
     }
 
     /**
@@ -136,13 +153,13 @@ class Auth {
             $url = esc_url_raw(wp_unslash($_SERVER[$source]));
             $scheme = wp_parse_url($url, PHP_URL_SCHEME);
             if (!$scheme) {
-                $url = 'http://'.$url;
+                $url = 'http://' . $url;
             }
             $host = wp_parse_url($url, PHP_URL_HOST);
         }
         return trim($host);
     }
-   
+
     /**
      * Utility function that returns true if authenticated and false if otherwise.
      *
@@ -177,6 +194,18 @@ class Auth {
     }
 
     /**
+     * Saves cptItem details
+     *
+     * @param array $cptItem
+     * @return void
+     */
+    public function setCptItem(array $cptItem) {
+        $asmp_options = get_option(self::OPTIONS_KEY);
+        $asmp_options[$this->productUniqueId]['cpt_item'] = json_encode($cptItem);
+        update_option(self::OPTIONS_KEY, $asmp_options);
+    }
+
+    /**
      * Setter for nag error message
      *
      * @param string $error_message
@@ -187,7 +216,6 @@ class Auth {
         $asmp_options[$this->productUniqueId]['nag_error_message'] = $error_message;
         update_option(self::OPTIONS_KEY, $asmp_options);
     }
-
 
     /**
      * Override Auth default sellers instance
@@ -212,8 +240,21 @@ class Auth {
      * @return boolean
      */
     public function getAsmpVED() {
-        $asmp_options = get_option(self::OPTIONS_KEY);
-        return isset($asmp_options[$this->productUniqueId]['asmp_ved']) ? $asmp_options[$this->productUniqueId]['asmp_ved'] : false;
+        $opts = get_option(self::OPTIONS_KEY);
+        return isset($opts[$this->productUniqueId]['asmp_ved']) ? $opts[$this->productUniqueId]['asmp_ved'] : false;
+    }
+
+    /**
+     * Getter for `cpt_item`
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @return array|null
+     */
+    public function getCptItem() {
+        $opts = get_option(self::OPTIONS_KEY);
+        return isset($opts[$this->productUniqueId]['cpt_item'])
+            ? json_decode($opts[$this->productUniqueId]['cpt_item'], ARRAY_A)
+            : null;
     }
 
     /**
@@ -222,10 +263,8 @@ class Auth {
      * @return string
      */
     public function getNagErrorMessage() {
-        $asmp_options = get_option(self::OPTIONS_KEY);
-        return isset($asmp_options[$this->productUniqueId]['nag_error_message']) ?
-            $asmp_options[$this->productUniqueId]['nag_error_message']
-            : '';
+        $opts = get_option(self::OPTIONS_KEY);
+        return isset($opts[$this->productUniqueId]['nag_error_message']) ? $opts[$this->productUniqueId]['nag_error_message'] : '';
     }
 
     /**

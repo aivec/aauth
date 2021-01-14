@@ -1,11 +1,12 @@
 <?php
+
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
 /**
  * Proprietary authentication for Aivec plugins/themes.
  */
-class Scheduler extends Auth implements Scaffold {
-
+class Scheduler extends Auth implements Scaffold
+{
     /**
      * The display name for the admin console nag.
      *
@@ -115,15 +116,19 @@ class Scheduler extends Auth implements Scaffold {
      * @return void
      */
     public function processAuthData() {
-        $result = $this->authenticate();
+        $res = $this->authenticate();
 
-        if ($result === 'success') {
+        if (!empty($res['cptItem']) && is_array($res['cptItem'])) {
+            $this->setCptItem($res['cptItem']);
+        }
+
+        if ($res['result'] === 'success') {
             $this->setAsmpVED(true);
             $this->setNagErrorMessage('');
             do_action('aauth_' . $this->productUniqueId . '_on_success');
         } else {
             $this->setAsmpVED(false);
-            $this->setNagErrorMessage($result);
+            $this->setNagErrorMessage($res['error']['message']);
             do_action('aauth_' . $this->productUniqueId . '_on_failure');
         }
     }
@@ -136,18 +141,33 @@ class Scheduler extends Auth implements Scaffold {
      * @return void
      */
     public function nag() {
-        if ($this->authenticated() === false) {
-            $nag_message = $this->getNagErrorMessage();
-            if (!empty($nag_message)) {
-                $class = 'notice notice-error';
-                $message = sprintf(
-                    /* translators: 1: formatted plugin name, 2: response message from server */
-                    __('%1$s： %2$s', 'aauth'),
-                    $this->nag_display_name,
-                    $this->getNagErrorMessage()
-                );
-                printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), $message);
+        if ($this->authenticated() === true) {
+            return;
+        }
+        $cptItem = $this->getCptItem();
+        if ($cptItem === null) {
+            // cptItem isn't initiated, fallback to 'success'
+            return;
+        }
+        if (is_array($cptItem)) {
+            $authmode = isset($cptItem['usageTermsCategory']) ? $cptItem['usageTermsCategory'] : '';
+            if ($authmode !== 'restricted_usage_by_domain') {
+                // Don't show an error message if the plugin/theme can be used anyways.
+                // In other words, if only updates won't work, let the user discover that fact
+                // from the plugin/theme update screen
+                return;
             }
+        }
+        $nag_message = $this->getNagErrorMessage();
+        if (!empty($nag_message)) {
+            $class = 'notice notice-error';
+            $message = sprintf(
+                /* translators: 1: formatted plugin name, 2: response message from server */
+                __('%1$s： %2$s', 'aauth'),
+                $this->nag_display_name,
+                $this->getNagErrorMessage()
+            );
+            printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), $message);
         }
     }
 

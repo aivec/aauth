@@ -1,4 +1,5 @@
 <?php
+
 namespace Aivec\Welcart\ProprietaryAuthentication;
 
 /**
@@ -7,8 +8,8 @@ namespace Aivec\Welcart\ProprietaryAuthentication;
  *
  * @author Evan D Shaw <evandanielshaw@gmail.com>
  */
-interface Scaffold {
-
+interface Scaffold
+{
     /**
      * A catch all function that sends the authentication request to aivec.co.jp/plugin and
      * processes any authentication errors.

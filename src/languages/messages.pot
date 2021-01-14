@@ -7,25 +7,20 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2020-07-17T15:00:17+09:00\n"
+"POT-Creation-Date: 2021-01-14T17:54:29+09:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.4.0\n"
 "X-Domain: aauth\n"
 
-#. translators: the name of the company whose server is being called
-#: src/Auth.php:104
-msgid "There was a problem accessing %s server. Please try again."
-msgstr ""
-
 #. translators: 1: formatted plugin name, 2: response message from server
-#: src/Scheduler.php:100
+#: src/Scheduler.php:166
 msgid "%1$s： %2$s"
 msgstr ""
 
-#: src/Sellers.php:301
+#: src/Sellers.php:321
 msgid "Authentication"
 msgstr ""
 
-#: src/Sellers.php:306
+#: src/Sellers.php:326
 msgid "Please choose your provider"
 msgstr ""
