@@ -9,7 +9,7 @@ use InvalidArgumentException;
  */
 class Auth
 {
-    const VERSION = '7.0.0';
+    const VERSION = '7.0.1';
     const OPTIONS_KEY = 'asmp_authdata';
 
     /**
@@ -93,7 +93,7 @@ class Auth
         ];
 
         $curl_opts = [
-            CURLOPT_URL => trim($this->getEndpoint(), '/') . "/wcexcptm/authenticate/{$this->productUniqueId}",
+            CURLOPT_URL => trim($this->getEndpoint(), '/') . "/wcexcptm/v4/authenticate/{$this->productUniqueId}",
             CURLOPT_REFERER => $this->getHost(),
             CURLOPT_HEADER => false,
             CURLOPT_RETURNTRANSFER => true,
