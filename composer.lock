@@ -60,16 +60,16 @@
     "packages-dev": [
         {
             "name": "aivec/phpcs-wp",
-            "version": "v2.0.6",
+            "version": "v2.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aivec/phpcs-wp.git",
-                "reference": "a9b829d0138bb03609775e0c61be1bcab25b214b"
+                "reference": "f18d6038378472400805d1271562565b482366e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aivec/phpcs-wp/zipball/a9b829d0138bb03609775e0c61be1bcab25b214b",
-                "reference": "a9b829d0138bb03609775e0c61be1bcab25b214b",
+                "url": "https://api.github.com/repos/aivec/phpcs-wp/zipball/f18d6038378472400805d1271562565b482366e9",
+                "reference": "f18d6038378472400805d1271562565b482366e9",
                 "shasum": ""
             },
             "require": {
@@ -88,9 +88,9 @@
             "description": "Aivec coding standards for vanilla PHP and WordPress PHP libraries/projects/plugins/themes",
             "support": {
                 "issues": "https://github.com/aivec/phpcs-wp/issues",
-                "source": "https://github.com/aivec/phpcs-wp/tree/v2.0.6"
+                "source": "https://github.com/aivec/phpcs-wp/tree/v2.0.8"
             },
-            "time": "2021-01-14T08:49:50+00:00"
+            "time": "2021-01-14T13:09:01+00:00"
         },
         {
             "name": "dealerdirect/phpcodesniffer-composer-installer",
