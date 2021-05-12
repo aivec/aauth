@@ -43,6 +43,7 @@ class Scheduler extends Auth implements Scaffold
         $this->plugin_file = $plugin_file;
 
         add_action('admin_notices', [$this, 'nag']);
+        add_action('wp_error_added', [$this, 'setUpdateApiErrorResponse'], 10, 4);
         add_action($productUniqueId . '_validate_install', [$this, 'cronValidateInstall']);
         if ($this->authenticated() === false) {
             $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
@@ -60,6 +61,49 @@ class Scheduler extends Auth implements Scaffold
         }
 
         register_deactivation_hook($this->plugin_file, [$this, 'clearCron']);
+    }
+
+    /**
+     * Sets the message for the `WP_Error` used for a failed update attempt.
+     *
+     * @author Evan D Shaw <evandanielshaw@gmail.com>
+     * @param string|int $code     Error code.
+     * @param string     $message  Error message.
+     * @param mixed      $data     Error data. Might be empty.
+     * @param WP_Error   $wperror The WP_Error object.
+     * @return void
+     */
+    public function setUpdateApiErrorResponse($code, $message, $data, $wperror) {
+        $body = isset($data['body']) ? (string)$data['body'] : '';
+        if (empty($body)) {
+            return;
+        }
+        $json = json_decode($body, true);
+        if (empty($json)) {
+            return;
+        }
+        if (empty($json['type']) || empty($json['cptItem']) || empty($json['error'])) {
+            return;
+        }
+        if ($json['type'] === 'WCEXCPTM_API_ERROR') {
+            if ($json['cptItem']['itemUniqueId'] !== $this->productUniqueId) {
+                return;
+            }
+
+            /*
+             * http_404 is set because WordPress automatically interprets a failed download request
+             * as if the file couldn't be found...
+             *
+             * {@see wp-admin/includes/file.php download_url()}
+             */
+            if (!isset($wperror->errors['http_404'])) {
+                return;
+            }
+            if (!isset($wperror->errors['http_404'][0])) {
+                return;
+            }
+            $wperror->errors['http_404'][0] = $json['error']['message'];
+        }
     }
 
     /**
